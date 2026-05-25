@@ -6,6 +6,7 @@ import { getAuthCredentials, isAuthenticated } from '@/utils/auth-utils';
 import { useRouter } from 'next/router';
 import AuthPageLayout from '@/components/layouts/auth-layout';
 import { Routes } from '@/config/routes';
+import { useEffect } from 'react';
 
 export const getStaticProps: GetStaticProps = async ({ locale }) => ({
   props: {
@@ -16,10 +17,13 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => ({
 export default function LoginPage() {
   const router = useRouter();
   const { token, permissions } = getAuthCredentials();
-  if (isAuthenticated({ token, permissions })) {
-    router.replace(Routes.dashboard);
-  }
   const { t } = useTranslation('common');
+
+  useEffect(() => {
+    if (isAuthenticated({ token, permissions })) {
+      router.replace(Routes.dashboard);
+    }
+  }, []);
 
   return (
     <AuthPageLayout>
