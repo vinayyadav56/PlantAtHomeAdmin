@@ -7,11 +7,11 @@ import {
 import { Routes } from '@/config/routes';
 
 export const siteSettings = {
-  name: 'PickBazar',
+  name: 'PlantAtHome',
   description: '',
   logo: {
     url: '/logo.svg',
-    alt: 'PickBazar',
+    alt: 'PlantAtHome',
     href: '/',
     width: 138,
     height: 34,
@@ -25,8 +25,8 @@ export const siteSettings = {
   },
   defaultLanguage: 'en',
   author: {
-    name: 'RedQ',
-    websiteUrl: 'https://redq.io',
+    name: 'PlantAtHome',
+    websiteUrl: 'https://plantathome.in',
     address: '',
   },
   headerLinks: [],
