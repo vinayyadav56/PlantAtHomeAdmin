@@ -18,8 +18,8 @@ module.exports = {
       fontFamily: {
         // body: ['Open Sans', 'system-ui', 'sans-serif'],
         // heading: ['Open Sans', 'system-ui', 'sans-serif'],
-        body: [`Inter, sans-serif`],
-        heading: [`Inter, sans-serif`],
+        body: ['Inter', 'system-ui', 'sans-serif'],
+        heading: ['Poppins', 'system-ui', 'sans-serif'],
       },
       colors: {
         light: withOpacity('--color-light'),
