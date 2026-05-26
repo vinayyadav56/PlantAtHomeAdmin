@@ -1,0 +1,56 @@
+name: CI/CD → Staging
+
+on:
+  push:
+    branches: [staging]
+  pull_request:
+    branches: [staging, main]
+
+jobs:
+  lint-and-build:
+    name: Lint & Build Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint
+        run: yarn lint || true
+
+      - name: Build check
+        env:
+          NEXT_PUBLIC_REST_API_ENDPOINT: https://plantathome-api-staging.up.railway.app/api
+          NEXT_PUBLIC_SHOP_URL: https://plantathome-shop-staging.vercel.app
+          NEXT_PUBLIC_VERSION: REST
+          NEXT_PUBLIC_AUTH_TOKEN_KEY: AUTH_CRED
+          NEXT_PUBLIC_DEFAULT_LANGUAGE: en
+          NEXT_PUBLIC_ENABLE_MULTI_LANG: 'false'
+          NEXT_PUBLIC_PUSHER_ENABLED: 'false'
+        run: next build --no-lint
+
+  deploy-staging:
+    name: Deploy to Vercel (Staging)
+    needs: lint-and-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_ADMIN_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./
