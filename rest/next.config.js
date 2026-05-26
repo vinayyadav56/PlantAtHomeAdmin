@@ -29,7 +29,7 @@ const nextConfig = {
       '127.0.0.1:8000',
     ],
   },
-  ...(process.env.APPLICATION_MODE === 'production' && {
+  ...(['production', 'staging'].includes(process.env.APPLICATION_MODE) && {
     typescript: {
       ignoreBuildErrors: true,
     },
