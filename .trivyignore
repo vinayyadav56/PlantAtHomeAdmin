@@ -1,0 +1,4 @@
+# CVE-2024-4068: ReDoS in braces@3.0.2 (build tool — brace expansion for globs).
+# Only exploitable if an attacker controls brace expressions at build time.
+# No runtime impact. Will be removed once braces is upgraded via yarn resolutions.
+CVE-2024-4068
