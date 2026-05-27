@@ -80,6 +80,7 @@ jobs:
 
       - name: Build check (staging env)
         env:
+          APPLICATION_MODE: production
           NEXT_PUBLIC_REST_API_ENDPOINT: https://plantathome-api-production.up.railway.app/api
           NEXT_PUBLIC_SHOP_URL: https://plantathome-shop-staging.vercel.app
           NEXT_PUBLIC_VERSION: REST
