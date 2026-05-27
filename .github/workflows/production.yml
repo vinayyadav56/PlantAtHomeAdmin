@@ -1,0 +1,160 @@
+name: Admin – Production Deploy
+
+# ─── Manual trigger only ───────────────────────────────────────────────────────
+# Production ALWAYS deploys from main. Any other branch is rejected.
+# Requires GitHub Secrets: EC2_SSH_KEY, EC2_HOST, EC2_USER
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy — must be "main" for production'
+        required: true
+        default: 'main'
+        type: string
+      confirm:
+        description: 'Type "deploy-production" to confirm — this touches live traffic'
+        required: true
+        type: string
+
+jobs:
+  # ── 0. Enforce main-only ──────────────────────────────────────────────────────
+  validate:
+    name: Validate Branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reject non-main branches
+        run: |
+          if [ "${{ inputs.branch }}" != "main" ]; then
+            echo "ERROR: Production deploys must use branch 'main'. Got: ${{ inputs.branch }}"
+            exit 1
+          fi
+          echo "Branch check passed: ${{ inputs.branch }}"
+
+  # ── 1. Security & Vulnerability Scan ─────────────────────────────────────────
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+
+      - name: Secret scan (Gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Dependency vulnerability scan (yarn audit)
+        run: yarn audit --level high || true
+
+      - name: Filesystem vulnerability scan (Trivy)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL
+          exit-code: '0'
+          ignore-unfixed: true
+          format: table
+
+  # ── 2. Build & Type Check ─────────────────────────────────────────────────────
+  test:
+    name: Lint & Build Check
+    runs-on: ubuntu-latest
+    needs: security
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint
+        run: yarn workspace @marvel/admin-rest lint || true
+
+      - name: Build check (production env)
+        env:
+          NEXT_PUBLIC_REST_API_ENDPOINT: https://api.plantathome.in/api
+          NEXT_PUBLIC_SHOP_URL: https://plantathome.in
+          NEXT_PUBLIC_VERSION: REST
+          NEXT_PUBLIC_AUTH_TOKEN_KEY: AUTH_CRED
+          NEXT_PUBLIC_DEFAULT_LANGUAGE: en
+          NEXT_PUBLIC_ENABLE_MULTI_LANG: 'false'
+          NEXT_PUBLIC_PUSHER_ENABLED: 'false'
+        run: yarn build:rest
+
+  # ── 3. Deploy to AWS EC2 ──────────────────────────────────────────────────────
+  deploy:
+    name: Deploy → AWS EC2 (Production Admin)
+    runs-on: ubuntu-latest
+    needs: [security, test]
+    if: inputs.confirm == 'deploy-production'
+    environment: production
+
+    steps:
+      - name: SSH deploy to EC2
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+
+            echo "==> Pulling latest code..."
+            cd /var/www/plantathome/admin-src
+            git fetch origin
+            git checkout main
+            git reset --hard origin/main
+
+            echo "==> Installing dependencies..."
+            cd rest
+            npm ci --prefer-offline
+
+            echo "==> Building..."
+            NEXT_PUBLIC_REST_API_ENDPOINT=https://api.plantathome.in/api \
+            NEXT_PUBLIC_SHOP_URL=https://plantathome.in \
+            NEXT_PUBLIC_VERSION=REST \
+            NEXT_PUBLIC_AUTH_TOKEN_KEY=AUTH_CRED \
+            NEXT_PUBLIC_DEFAULT_LANGUAGE=en \
+            NEXT_PUBLIC_ENABLE_MULTI_LANG=false \
+            NEXT_PUBLIC_PUSHER_ENABLED=false \
+            npm run build
+
+            echo "==> Restarting PM2 process..."
+            pm2 restart admin || pm2 start "npm run start" --name admin
+            pm2 save
+
+            echo "==> Deploy complete"
+
+      - name: Production health check
+        run: |
+          sleep 15
+          for i in 1 2 3; do
+            R=$(curl -s -w "\nHTTP:%{http_code}" --max-time 15 \
+              "https://admin.plantathome.in" 2>/dev/null)
+            echo "Attempt $i: $(echo "$R" | grep HTTP)"
+            echo "$R" | grep -q "HTTP:200" && echo "PASS" && exit 0
+            sleep 10
+          done
+          echo "FAIL — admin health check did not return 200"
+          exit 1
