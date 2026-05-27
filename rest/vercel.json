@@ -3,7 +3,7 @@
   "framework": "nextjs",
   "regions": ["bom1"],
   "env": {
-    "NEXT_PUBLIC_REST_API_ENDPOINT": "https://plantathome-api-staging.up.railway.app/api",
+    "NEXT_PUBLIC_REST_API_ENDPOINT": "https://plantathome-api-production.up.railway.app/api",
     "NEXT_PUBLIC_SHOP_URL": "https://plantathome-shop-staging.vercel.app",
     "NEXT_PUBLIC_AUTH_TOKEN_KEY": "AUTH_CRED",
     "NEXT_PUBLIC_VERSION": "REST",
@@ -21,11 +21,11 @@
     "NEXT_PUBLIC_ORDER_CREATED_EVENT": "order.create.event",
     "NEXT_PUBLIC_MESSAGE_EVENT": "message.event",
     "NEXT_PUBLIC_GOOGLE_MAP_API_KEY": "",
-    "APPLICATION_MODE": "staging"
+    "APPLICATION_MODE": "production"
   },
   "build": {
     "env": {
-      "NEXT_PUBLIC_REST_API_ENDPOINT": "https://plantathome-api-staging.up.railway.app/api",
+      "NEXT_PUBLIC_REST_API_ENDPOINT": "https://plantathome-api-production.up.railway.app/api",
       "NEXT_PUBLIC_SHOP_URL": "https://plantathome-shop-staging.vercel.app",
       "NEXT_PUBLIC_AUTH_TOKEN_KEY": "AUTH_CRED",
       "NEXT_PUBLIC_VERSION": "REST",
@@ -43,7 +43,7 @@
       "NEXT_PUBLIC_ORDER_CREATED_EVENT": "order.create.event",
       "NEXT_PUBLIC_MESSAGE_EVENT": "message.event",
       "NEXT_PUBLIC_GOOGLE_MAP_API_KEY": "",
-      "APPLICATION_MODE": "staging"
+      "APPLICATION_MODE": "production"
     }
   }
 }
