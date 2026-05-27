@@ -98,6 +98,7 @@ jobs:
           NEXT_PUBLIC_VERSION: REST
           NEXT_PUBLIC_AUTH_TOKEN_KEY: AUTH_CRED
           NEXT_PUBLIC_DEFAULT_LANGUAGE: en
+          NEXT_PUBLIC_AVAILABLE_LANGUAGES: 'en'
           NEXT_PUBLIC_ENABLE_MULTI_LANG: 'false'
           NEXT_PUBLIC_PUSHER_ENABLED: 'false'
         run: yarn build:rest
@@ -136,6 +137,7 @@ jobs:
             NEXT_PUBLIC_VERSION=REST \
             NEXT_PUBLIC_AUTH_TOKEN_KEY=AUTH_CRED \
             NEXT_PUBLIC_DEFAULT_LANGUAGE=en \
+            NEXT_PUBLIC_AVAILABLE_LANGUAGES=en \
             NEXT_PUBLIC_ENABLE_MULTI_LANG=false \
             NEXT_PUBLIC_PUSHER_ENABLED=false \
             npm run build
