@@ -89,7 +89,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Lint
-        run: yarn lint || true
+        run: yarn workspace @marvel/admin-rest lint || true
 
       - name: Build check (production env)
         env:
@@ -100,7 +100,7 @@ jobs:
           NEXT_PUBLIC_DEFAULT_LANGUAGE: en
           NEXT_PUBLIC_ENABLE_MULTI_LANG: 'false'
           NEXT_PUBLIC_PUSHER_ENABLED: 'false'
-        run: next build --no-lint
+        run: yarn build:rest
 
   # ── 3. Deploy to AWS EC2 ──────────────────────────────────────────────────────
   deploy:
