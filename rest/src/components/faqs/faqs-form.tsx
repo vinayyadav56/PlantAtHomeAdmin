@@ -63,6 +63,7 @@ export default function CreateOrUpdateFaqsForm({ initialValues }: IProps) {
   } = useForm<FormValues>({
     // @ts-ignore
     defaultValues: initialValues,
+    // @ts-ignore
     resolver: yupResolver(faqsValidationSchema),
   });
 
