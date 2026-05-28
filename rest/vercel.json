@@ -3,7 +3,7 @@
   "framework": "nextjs",
   "regions": ["bom1"],
   "env": {
-    "NEXT_PUBLIC_REST_API_ENDPOINT": "https://plantathome-api-production.up.railway.app/api",
+    "NEXT_PUBLIC_REST_API_ENDPOINT": "https://plantathome-production.up.railway.app/api",
     "NEXT_PUBLIC_SHOP_URL": "https://plantathome-shop-staging.vercel.app",
     "NEXT_PUBLIC_AUTH_TOKEN_KEY": "AUTH_CRED",
     "NEXT_PUBLIC_VERSION": "REST",
@@ -25,7 +25,7 @@
   },
   "build": {
     "env": {
-      "NEXT_PUBLIC_REST_API_ENDPOINT": "https://plantathome-api-production.up.railway.app/api",
+      "NEXT_PUBLIC_REST_API_ENDPOINT": "https://plantathome-production.up.railway.app/api",
       "NEXT_PUBLIC_SHOP_URL": "https://plantathome-shop-staging.vercel.app",
       "NEXT_PUBLIC_AUTH_TOKEN_KEY": "AUTH_CRED",
       "NEXT_PUBLIC_VERSION": "REST",
