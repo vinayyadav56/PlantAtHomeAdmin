@@ -6,9 +6,9 @@ export interface State {
 const initialState = {
   siteTitle: 'PlantAtHome',
   siteSubtitle: '',
-  currency: 'USD',
+  currency: 'INR',
   currencyOptions: {
-    formation: "en-US",
+    formation: "en-IN",
     fractions: 2,
   },
   logo: {

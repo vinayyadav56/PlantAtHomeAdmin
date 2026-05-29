@@ -57,7 +57,7 @@ export const siteSettings = {
       permission: adminOwnerAndStaffOnly,
     },
   ],
-  currencyCode: 'USD',
+  currencyCode: 'INR',
   sidebarLinks: {
     admin: {
       root: {
