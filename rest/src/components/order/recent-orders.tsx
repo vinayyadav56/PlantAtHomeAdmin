@@ -164,7 +164,6 @@ const RecentOrders = ({
           rowKey="id"
           scroll={{ x: 1000 }}
           expandable={{
-            expandedRowRender: () => '',
             rowExpandable: rowExpandable,
           }}
         />
