@@ -23,6 +23,10 @@ import { useForm } from 'react-hook-form';
 type FormValues = {
   siteTitle: string;
   siteSubtitle: string;
+  contactPhone: string;
+  contactEmail: string;
+  contactAddress: string;
+  freeDeliveryThreshold: number;
   // siteLink: string;
   // copyrightText: string;
   // externalText: string;
@@ -85,6 +89,10 @@ export default function GeneralSettingsForm({
     defaultValues: {
       ...options,
       server_info: serverInfo,
+      contactPhone: (options as any)?.contactPhone ?? '',
+      contactEmail: (options as any)?.contactEmail ?? '',
+      contactAddress: (options as any)?.contactAddress ?? '',
+      freeDeliveryThreshold: (options as any)?.freeDeliveryThreshold ?? 999,
       logo: options?.logo ?? '',
       collapseLogo: options?.collapseLogo ?? '',
       useEnableGateway: options?.useEnableGateway ?? true,
@@ -112,10 +120,14 @@ export default function GeneralSettingsForm({
   async function onSubmit(values: FormValues) {
     updateSettingsMutation({
       language: locale,
-      // @ts-ignore // // FIXME
+      // @ts-ignore
       options: {
         ...options,
         ...values,
+        contactPhone: values.contactPhone,
+        contactEmail: values.contactEmail,
+        contactAddress: values.contactAddress,
+        freeDeliveryThreshold: Number(values.freeDeliveryThreshold),
         server_info: serverInfo,
         signupPoints: Number(values.signupPoints),
         currencyToWalletRatio: Number(values.currencyToWalletRatio),
@@ -211,6 +223,38 @@ export default function GeneralSettingsForm({
             toolTipText={t('form:input-tooltip-site-sub-title')}
             {...register('siteSubtitle')}
             error={t(errors.siteSubtitle?.message!)}
+            variant="outline"
+            className="mb-5"
+          />
+
+          <Input
+            label="Contact Phone"
+            {...register('contactPhone')}
+            variant="outline"
+            className="mb-5"
+            placeholder="+91 98765 43210"
+          />
+
+          <Input
+            label="Contact Email"
+            {...register('contactEmail')}
+            variant="outline"
+            className="mb-5"
+            placeholder="hello@plantathome.in"
+          />
+
+          <Input
+            label="Contact Address"
+            {...register('contactAddress')}
+            variant="outline"
+            className="mb-5"
+            placeholder="Bengaluru, Karnataka"
+          />
+
+          <Input
+            label="Free Delivery Threshold (₹)"
+            {...register('freeDeliveryThreshold')}
+            type="number"
             variant="outline"
             className="mb-5"
           />

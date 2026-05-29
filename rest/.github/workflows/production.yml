@@ -117,8 +117,8 @@ jobs:
             NEXT_PUBLIC_PUSHER_ENABLED=false \
             npm run build
 
-            echo "==> Restarting PM2 process..."
-            pm2 restart admin || pm2 start "npm run start" --name admin
+            echo "==> Reloading PM2 process (zero-downtime)..."
+            pm2 reload admin || pm2 start "npm run start" --name admin
             pm2 save
 
             echo "==> Deploy complete"

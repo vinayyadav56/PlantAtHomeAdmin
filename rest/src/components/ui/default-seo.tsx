@@ -13,7 +13,7 @@ const DefaultSeo = () => {
         title: settings?.seo?.ogTitle,
         description: settings?.seo?.ogDescription,
         type: 'website',
-        locale: 'en_US',
+        locale: 'en_IN',
         site_name: settings?.siteTitle,
         images: [
           {

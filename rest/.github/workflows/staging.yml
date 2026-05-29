@@ -5,11 +5,6 @@ name: Admin – Staging Deploy
 on:
   workflow_dispatch:
     inputs:
-      branch:
-        description: 'Branch to deploy (default: staging)'
-        required: true
-        default: 'staging'
-        type: string
       confirm:
         description: 'Type "deploy" to confirm staging deployment'
         required: true
@@ -23,7 +18,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
           fetch-depth: 0
 
       - name: Secret scan (Gitleaks)
@@ -63,8 +57,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -99,8 +91,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch }}
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
