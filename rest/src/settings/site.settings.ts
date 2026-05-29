@@ -497,6 +497,19 @@ export const siteSettings = {
         ],
       },
 
+      tools: {
+        href: '',
+        label: 'text-tools',
+        icon: 'ImageGeneratorIcon',
+        childMenu: [
+          {
+            href: Routes.imageGenerator,
+            label: 'sidebar-nav-item-image-generator',
+            icon: 'ImageGeneratorIcon',
+          },
+        ],
+      },
+
       settings: {
         href: '',
         label: 'text-site-management',
