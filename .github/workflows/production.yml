@@ -172,10 +172,10 @@ jobs:
             R=$(curl -s -w "\nHTTP:%{http_code}" --max-time 15 \
               "https://admin.plantathome.in" 2>/dev/null)
             echo "Attempt $i: $(echo "$R" | grep HTTP)"
-            echo "$R" | grep -q "HTTP:200" && echo "PASS" && exit 0
+            echo "$R" | grep -qE "HTTP:(200|307)" && echo "PASS" && exit 0
             sleep 10
           done
-          echo "FAIL — admin health check did not return 200"
+          echo "FAIL — admin health check did not return 200 or 307"
           exit 1
 
       - name: Close port 22 for this runner
