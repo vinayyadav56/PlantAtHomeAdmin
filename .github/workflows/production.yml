@@ -167,7 +167,7 @@ jobs:
             git reset --hard origin/main
 
             echo "==> Installing production dependencies (no build, fast)..."
-            yarn install --frozen-lockfile --prefer-offline
+            yarn install --frozen-lockfile --ignore-engines
 
             echo "==> Deploying pre-built artifact from runner..."
             tar -xzf /tmp/admin-build.tar.gz
