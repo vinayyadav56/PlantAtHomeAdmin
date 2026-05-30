@@ -173,6 +173,11 @@ jobs:
             tar -xzf /tmp/admin-build.tar.gz
             rm -f /tmp/admin-build.tar.gz
 
+            echo "==> Fixing build paths (runner path → EC2 path)..."
+            sed -i 's|"appDir":"[^"]*"|"appDir":"/var/www/plantathome/admin-src/rest"|g' \
+              rest/.next/required-server-files.json
+            echo "appDir patched to: /var/www/plantathome/admin-src/rest"
+
             echo "==> Reloading PM2 (zero-downtime)..."
             pm2 reload admin || pm2 start "npm run start" --name admin --cwd /var/www/plantathome/admin-src/rest
             pm2 save
