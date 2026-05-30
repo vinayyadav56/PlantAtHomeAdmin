@@ -47,3 +47,5 @@ sw.js
 # IDE
 .idea/
 .vscode/
+.env.*
+!.env.*.example
