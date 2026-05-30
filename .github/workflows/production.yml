@@ -179,7 +179,7 @@ jobs:
             echo "appDir patched to: /var/www/plantathome/admin-src/rest"
 
             echo "==> Reloading PM2 (zero-downtime)..."
-            pm2 reload admin || pm2 start "npm run start" --name admin --cwd /var/www/plantathome/admin-src/rest
+            pm2 reload admin || pm2 start "yarn start" --name admin --cwd /var/www/plantathome/admin-src/rest
             pm2 save
 
             echo "==> Deploy complete"
@@ -207,3 +207,4 @@ jobs:
             --group-id ${{ secrets.AWS_EC2_SG_ID }} \
             --protocol tcp --port 22 --cidr "${RUNNER_IP}/32" \
             --region ${{ secrets.AWS_REGION }} || true
+
