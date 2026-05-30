@@ -1,7 +1,5 @@
 name: Admin – Staging Deploy
 
-# ─── Manual trigger only ───────────────────────────────────────────────────────
-# Requires GitHub Secrets: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_ADMIN_PROJECT_ID
 on:
   workflow_dispatch:
     inputs:
@@ -40,11 +38,9 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      # Known CVEs in npm/yarn packages — fails on high or critical
-      - name: Dependency vulnerability scan (yarn audit)
+      - name: Dependency vulnerability scan
         run: yarn audit --level high || true
 
-      # Filesystem CVE scan — fails on HIGH or CRITICAL findings
       - name: Filesystem vulnerability scan (Trivy)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
@@ -80,15 +76,16 @@ jobs:
 
       - name: Build check (staging env)
         env:
-          APPLICATION_MODE: production
-          NEXT_PUBLIC_REST_API_ENDPOINT: https://plantathome-api-production.up.railway.app/api
+          APPLICATION_MODE: staging
+          NEXT_PUBLIC_REST_API_ENDPOINT: https://plantathome-production.up.railway.app/api
           NEXT_PUBLIC_SHOP_URL: https://plantathome-shop-staging.vercel.app
           NEXT_PUBLIC_VERSION: REST
           NEXT_PUBLIC_AUTH_TOKEN_KEY: AUTH_CRED
           NEXT_PUBLIC_DEFAULT_LANGUAGE: en
-          NEXT_PUBLIC_AVAILABLE_LANGUAGES: 'en'
+          NEXT_PUBLIC_AVAILABLE_LANGUAGES: en
           NEXT_PUBLIC_ENABLE_MULTI_LANG: 'false'
           NEXT_PUBLIC_PUSHER_ENABLED: 'false'
+          NODE_OPTIONS: '--max-old-space-size=6144'
         run: yarn build:rest
 
   # ── 3. Deploy to Vercel (Staging) ─────────────────────────────────────────────
@@ -104,11 +101,26 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
 
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v42.3.0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_ADMIN_PROJECT_ID }}
-          vercel-args: '--prod'
-          working-directory: ./rest
+          node-version: '20'
+
+      - name: Deploy to Vercel
+        working-directory: rest
+        run: |
+          npx vercel --token "$VERCEL_TOKEN" \
+            --yes --prod \
+            --build-env "APPLICATION_MODE=staging" \
+            --build-env "NEXT_PUBLIC_REST_API_ENDPOINT=https://plantathome-production.up.railway.app/api" \
+            --build-env "NEXT_PUBLIC_SHOP_URL=https://plantathome-shop-staging.vercel.app" \
+            --build-env "NEXT_PUBLIC_VERSION=REST" \
+            --build-env "NEXT_PUBLIC_AUTH_TOKEN_KEY=AUTH_CRED" \
+            --build-env "NEXT_PUBLIC_DEFAULT_LANGUAGE=en" \
+            --build-env "NEXT_PUBLIC_AVAILABLE_LANGUAGES=en" \
+            --build-env "NEXT_PUBLIC_ENABLE_MULTI_LANG=false" \
+            --build-env "NEXT_PUBLIC_PUSHER_ENABLED=false"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_ADMIN_PROJECT_ID }}
