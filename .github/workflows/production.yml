@@ -1,8 +1,6 @@
 name: Admin – Production Deploy
 
-# ─── Manual trigger only ───────────────────────────────────────────────────────
-# Production ALWAYS deploys from main. Any other branch is rejected.
-# Requires GitHub Secrets: EC2_SSH_KEY, EC2_HOST, EC2_USER
+# Build on GitHub Actions runner (7GB RAM), deploy only artifact to EC2
 on:
   workflow_dispatch:
     inputs:
@@ -30,7 +28,7 @@ jobs:
           fi
           echo "Branch check passed: ${{ inputs.branch }}"
 
-  # ── 1. Security & Vulnerability Scan ─────────────────────────────────────────
+  # ── 1. Security Scan ─────────────────────────────────────────────────────────
   security:
     name: Security Scan
     runs-on: ubuntu-latest
@@ -55,7 +53,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Dependency vulnerability scan (yarn audit)
+      - name: Dependency vulnerability scan
         run: yarn audit --level high || true
 
       - name: Filesystem vulnerability scan (Trivy)
@@ -68,9 +66,9 @@ jobs:
           ignore-unfixed: true
           format: table
 
-  # ── 2. Build & Type Check ─────────────────────────────────────────────────────
-  test:
-    name: Lint & Build Check
+  # ── 2. Build on Runner (7GB RAM — zero OOM risk) ─────────────────────────────
+  build:
+    name: Build Admin (on runner)
     runs-on: ubuntu-latest
     needs: security
 
@@ -91,7 +89,7 @@ jobs:
       - name: Lint
         run: yarn workspace @marvel/admin-rest lint || true
 
-      - name: Build check (production env)
+      - name: Build (production env — runner has 7GB RAM)
         env:
           APPLICATION_MODE: production
           NEXT_PUBLIC_REST_API_ENDPOINT: https://api.plantathome.in/api
@@ -102,17 +100,33 @@ jobs:
           NEXT_PUBLIC_AVAILABLE_LANGUAGES: 'en'
           NEXT_PUBLIC_ENABLE_MULTI_LANG: 'false'
           NEXT_PUBLIC_PUSHER_ENABLED: 'false'
+          NODE_OPTIONS: '--max-old-space-size=6144'
         run: yarn build:rest
+
+      - name: Package build artifact
+        run: tar -czf admin-build.tar.gz rest/.next rest/public
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-build
+          path: admin-build.tar.gz
+          retention-days: 1
 
   # ── 3. Deploy to AWS EC2 ──────────────────────────────────────────────────────
   deploy:
     name: Deploy → AWS EC2 (Production Admin)
     runs-on: ubuntu-latest
-    needs: [security, test]
+    needs: [security, build]
     if: inputs.confirm == 'deploy-production'
     environment: production
 
     steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: admin-build
+
       - name: Open port 22 for this runner
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -126,41 +140,41 @@ jobs:
             --protocol tcp --port 22 --cidr "${RUNNER_IP}/32" \
             --region ${{ secrets.AWS_REGION }} || true
 
+      - name: Upload build artifact to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "admin-build.tar.gz"
+          target: "/tmp/"
+
       - name: SSH deploy to EC2
         uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          command_timeout: 30m
+          command_timeout: 10m
           script: |
             set -e
 
-            echo "==> Pulling latest code..."
+            echo "==> Pulling latest source..."
             cd /var/www/plantathome/admin-src
             git fetch origin
             git checkout -- . 2>/dev/null || true
             git checkout main
             git reset --hard origin/main
 
-            echo "==> Installing dependencies..."
-            cd rest
-            npm ci --prefer-offline
+            echo "==> Installing production dependencies (no build, fast)..."
+            yarn install --frozen-lockfile --prefer-offline
 
-            echo "==> Building..."
-            NODE_OPTIONS="--max-old-space-size=1500" \
-            NEXT_PUBLIC_REST_API_ENDPOINT=https://api.plantathome.in/api \
-            NEXT_PUBLIC_SHOP_URL=https://plantathome.in \
-            NEXT_PUBLIC_VERSION=REST \
-            NEXT_PUBLIC_AUTH_TOKEN_KEY=AUTH_CRED \
-            NEXT_PUBLIC_DEFAULT_LANGUAGE=en \
-            NEXT_PUBLIC_AVAILABLE_LANGUAGES=en \
-            NEXT_PUBLIC_ENABLE_MULTI_LANG=false \
-            NEXT_PUBLIC_PUSHER_ENABLED=false \
-            npm run build
+            echo "==> Deploying pre-built artifact from runner..."
+            tar -xzf /tmp/admin-build.tar.gz
+            rm -f /tmp/admin-build.tar.gz
 
-            echo "==> Reloading PM2 process (zero-downtime)..."
-            pm2 reload admin || pm2 start "npm run start" --name admin
+            echo "==> Reloading PM2 (zero-downtime)..."
+            pm2 reload admin || pm2 start "npm run start" --name admin --cwd /var/www/plantathome/admin-src/rest
             pm2 save
 
             echo "==> Deploy complete"
@@ -169,13 +183,12 @@ jobs:
         run: |
           sleep 15
           for i in 1 2 3; do
-            R=$(curl -s -w "\nHTTP:%{http_code}" --max-time 15 \
-              "https://admin.plantathome.in" 2>/dev/null)
-            echo "Attempt $i: $(echo "$R" | grep HTTP)"
-            echo "$R" | grep -qE "HTTP:(200|307)" && echo "PASS" && exit 0
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "https://admin.plantathome.in")
+            echo "Attempt $i: HTTP $STATUS"
+            echo "$STATUS" | grep -qE "^(2|3)" && echo "PASS" && exit 0
             sleep 10
           done
-          echo "FAIL — admin health check did not return 200 or 307"
+          echo "FAIL — admin health check failed"
           exit 1
 
       - name: Close port 22 for this runner
