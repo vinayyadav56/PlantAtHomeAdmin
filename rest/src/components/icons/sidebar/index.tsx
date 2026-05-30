@@ -45,3 +45,4 @@ export { LogOutIcon } from '@/components/icons/logout';
 export { MyShopOwnerIcon } from '@/components/icons/sidebar/my-shop';
 export { ChatOwnerIcon } from '@/components/icons/sidebar/chat';
 export { StoreNoticeOwnerIcon } from '@/components/icons/sidebar/store-notice';
+export { ImageGeneratorIcon } from '@/components/icons/sidebar/image-generator';

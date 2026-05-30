@@ -663,5 +663,14 @@
   "text-review-system": "Review mechanism",
   "input-tooltip-review-system": "In this feature Super admin can control review system. Either each product can be reviewed by one customer only one time, or customer can reviewed the same product on each order. Incase of Digital Product if customer gave review already then he/she can update it.",
   "input-tooltip-enable-review-popup": "When a customer's order is completed, then a pop-up box will appear in the shop end to inform customer about giving a review",
-  "text-video-tooltip": "Please enter your Iframe embed code here."
+  "text-video-tooltip": "Please enter your Iframe embed code here.",
+  "input-label-image-prompt": "Image Prompt",
+  "placeholder-image-prompt": "e.g. A lush Monstera Deliciosa plant in a terracotta pot on a white background, professional product photography",
+  "error-prompt-required": "Prompt is required",
+  "input-label-resolution": "Resolution",
+  "input-label-quality": "Quality",
+  "input-label-style": "Style",
+  "input-label-background": "Background",
+  "button-label-generate-image": "Generate Image",
+  "button-label-generate-batch": "Generate Batch Images"
 }

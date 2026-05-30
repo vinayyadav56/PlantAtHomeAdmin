@@ -1,4 +1,5 @@
 export const Routes = {
+  imageGenerator: '/tools/image-generator',
   dashboard: '/',
   login: '/login',
   logout: '/logout',
