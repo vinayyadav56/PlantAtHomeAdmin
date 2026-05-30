@@ -132,12 +132,14 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 30m
           script: |
             set -e
 
             echo "==> Pulling latest code..."
             cd /var/www/plantathome/admin-src
             git fetch origin
+            git checkout -- . 2>/dev/null || true
             git checkout main
             git reset --hard origin/main
 
@@ -146,6 +148,7 @@ jobs:
             npm ci --prefer-offline
 
             echo "==> Building..."
+            NODE_OPTIONS="--max-old-space-size=1500" \
             NEXT_PUBLIC_REST_API_ENDPOINT=https://api.plantathome.in/api \
             NEXT_PUBLIC_SHOP_URL=https://plantathome.in \
             NEXT_PUBLIC_VERSION=REST \
@@ -156,8 +159,8 @@ jobs:
             NEXT_PUBLIC_PUSHER_ENABLED=false \
             npm run build
 
-            echo "==> Restarting PM2 process..."
-            pm2 restart admin || pm2 start "npm run start" --name admin
+            echo "==> Reloading PM2 process (zero-downtime)..."
+            pm2 reload admin || pm2 start "npm run start" --name admin
             pm2 save
 
             echo "==> Deploy complete"
